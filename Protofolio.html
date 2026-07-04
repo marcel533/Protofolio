@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diamond8 Sniper — Frontend Entwickler</title>
+  <meta name="description" content="Diamond8 Sniper — Frontend-Entwickler, Cyber Security Enthusiast, KI-optimierter Code.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            void:       '#0a0d0c',
+            panel:      '#111716',
+            panel2:     '#141d1b',
+            line:       'rgba(255,255,255,0.09)',
+            lineStrong: 'rgba(77,252,255,0.35)',
+            cyan:       '#4dfcff',
+            green:      '#39ff8a',
+            ink:        '#e7f3ee',
+            mute:       '#8aa39a',
+          },
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'monospace'],
+            sans: ['Inter', 'sans-serif'],
+          },
+          boxShadow: {
+            glow: '0 0 0 1px rgba(77,252,255,0.15), 0 0 40px -12px rgba(77,252,255,0.35)',
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    /* ---------- Base ---------- */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+      * {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+      }
+    }
+
+    body {
+      background: #0a0d0c;
+    }
+
+    /* ---------- Background effects ---------- */
+    .scanlines {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 40;
+      mix-blend-mode: overlay;
+      opacity: 0.4;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,0.02) 0px,
+        rgba(255,255,255,0.02) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+    }
+
+    #matrixCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.22;
+    }
+
+    /* ---------- HUD corner brackets — signature motif, used sparingly ---------- */
+    .hud {
+      position: relative;
+    }
+    .hud::before,
+    .hud::after {
+      content: '';
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      pointer-events: none;
+      opacity: 0.7;
+      transition: all .3s ease;
+    }
+    .hud::before {
+      top: -1px;
+      left: -1px;
+      border-top: 1.5px solid var(--hud-color, #4dfcff);
+      border-left: 1.5px solid var(--hud-color, #4dfcff);
+    }
+    .hud::after {
+      bottom: -1px;
+      right: -1px;
+      border-bottom: 1.5px solid var(--hud-color, #4dfcff);
+      border-right: 1.5px solid var(--hud-color, #4dfcff);
+    }
+    .hud:hover::before,
+    .hud:hover::after {
+      width: 20px;
+      height: 20px;
+      opacity: 1;
+    }
+
+    /* ---------- Text & buttons ---------- */
+    .text-glow {
+      text-shadow: 0 0 24px rgba(77,252,255,0.28);
+    }
+
+    .btn-primary {
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+      transform: translateX(-130%);
+      transition: transform .55s ease;
+    }
+    .btn-primary:hover::before {
+      transform: translateX(130%);
+    }
+
+    .caret {
+      display: inline-block;
+      width: 2px;
+      height: 0.85em;
+      margin-left: 4px;
+      vertical-align: -0.1em;
+      background: #4dfcff;
+      animation: blink 1s steps(1) infinite;
+    }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    /* ---------- Scroll-reveal ---------- */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity .6s ease, transform .6s ease;
+    }
+    .fade-up.in {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ---------- Selection & scrollbar ---------- */
+    ::selection {
+      background: #4dfcff;
+      color: #0a0d0c;
+    }
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0a0d0c;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #233330;
+      border-radius: 6px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #324a45;
+    }
+
+    /* ---------- Skill bars ---------- */
+    .skill-bar {
+      height: 5px;
+      overflow: hidden;
+      background: #0e1513;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 3px;
+    }
+    .skill-bar > span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      border-radius: 3px;
+      transition: width 1.2s cubic-bezier(.2,.7,.2,1);
+    }
+
+    /* ---------- Nav ---------- */
+    .nav-link {
+      position: relative;
+    }
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: -4px;
+      width: 0;
+      height: 1px;
+      background: #4dfcff;
+      transition: width .25s ease;
+    }
+    .nav-link:hover::after {
+      width: 100%;
+    }
+
+    .mobile-menu {
+      overflow: hidden;
+      transition: max-height .35s ease, opacity .3s ease;
+    }
+
+    .status-dot {
+      box-shadow: 0 0 8px 2px rgba(57,255,138,0.6);
+    }
+  </style>
+</head>
+
+<body class="bg-void text-ink font-sans antialiased">
+  <div class="scanlines"></div>
+
+  <!-- ============================================================ -->
+  <!-- NAVBAR                                                        -->
+  <!-- ============================================================ -->
+  <header class="fixed top-0 inset-x-0 z-50 border-b border-line bg-void/85 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
+
+      <a href="#hero" class="flex items-center gap-2.5 font-mono font-bold text-sm tracking-wide text-ink">
+        <span class="w-7 h-7 border border-cyan/50 flex items-center justify-center text-cyan text-xs">D8</span>
+        DIAMOND8_SNIPER
+      </a>
+
+      <nav class="hidden md:flex items-center gap-9 font-mono text-[13px] text-mute">
+        <a href="#hero" class="nav-link hover:text-cyan transition-colors">Start</a>
+        <a href="#about" class="nav-link hover:text-cyan transition-colors">Profil</a>
+        <a href="#focus" class="nav-link hover:text-cyan transition-colors">Fokus</a>
+        <a href="#links" class="nav-link hover:text-cyan transition-colors">Links</a>
+        <span class="flex items-center gap-2 text-green">
+          <span class="w-1.5 h-1.5 rounded-full bg-green status-dot"></span>ONLINE
+        </span>
+      </nav>
+
+      <button id="menuBtn" class="md:hidden text-ink text-xl" aria-label="Menü öffnen" aria-expanded="false">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+
+    </div>
+
+    <div id="mobileMenu" class="mobile-menu md:hidden max-h-0 opacity-0 border-t border-line">
+      <nav class="flex flex-col px-5 py-4 gap-4 font-mono text-sm text-mute">
+        <a href="#hero" class="hover:text-cyan transition-colors">Start</a>
+        <a href="#about" class="hover:text-cyan transition-colors">Profil</a>
+        <a href="#focus" class="hover:text-cyan transition-colors">Fokus</a>
+        <a href="#links" class="hover:text-cyan transition-colors">Links</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ============================================================ -->
+    <!-- HERO                                                          -->
+    <!-- ============================================================ -->
+    <section id="hero" class="relative min-h-screen flex items-center overflow-hidden pt-16">
+      <canvas id="matrixCanvas"></canvas>
+      <div class="absolute inset-0 bg-gradient-to-b from-void/10 via-void/60 to-void"></div>
+
+      <div class="relative z-10 w-full max-w-4xl mx-auto px-5 sm:px-8 py-20">
+        <div
+          class="hud border border-line bg-panel/80 backdrop-blur-sm shadow-glow px-6 sm:px-12 py-10 sm:py-14"
+          style="--hud-color:#4dfcff"
+        >
+
+          <p class="font-mono text-[13px] text-mute mb-6 flex items-center gap-2">
+            <span class="text-green">root@d8sniper</span><span class="text-mute">:~$</span>
+            <span>whoami</span>
+          </p>
+
+          <h1 class="font-mono font-extrabold text-4xl sm:text-6xl leading-[1.08] text-ink text-glow">
+            Diamond8<span class="text-cyan">_</span>Sniper
+          </h1>
+
+          <p class="mt-5 font-mono text-sm sm:text-base text-cyan min-h-[1.6em]" id="typewriter"></p>
+
+          <p class="mt-8 max-w-xl font-sans text-[15px] sm:text-base text-ink/80 leading-relaxed">
+            Ich verbinde kreatives Frontend-Design mit HTML, CSS und JavaScript mit einem
+            tiefgreifenden Verständnis für Cyber Security. Durch den gezielten Einsatz von
+            KI-Tools optimiere und fixe ich meinen Code für maximale Effizienz und Sicherheit.
+          </p>
+
+          <div class="mt-10 flex flex-wrap items-center gap-4">
+            <a
+              href="https://github.com/marcel533"
+              target="_blank"
+              rel="noopener"
+              class="btn-primary inline-flex items-center gap-3 bg-cyan text-void font-mono font-semibold text-sm px-6 py-3.5 rounded-sm hover:brightness-110 transition-all"
+            >
+              <i class="fa-brands fa-github text-lg"></i>
+              Mein GitHub ansehen
+            </a>
+            <a
+              href="#links"
+              class="inline-flex items-center gap-2 border border-line text-ink/80 font-mono text-sm px-6 py-3.5 rounded-sm hover:border-cyan hover:text-cyan transition-colors"
+            >
+              Alle Links
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- ABOUT & SKILLS                                                -->
+    <!-- ============================================================ -->
+    <section id="about" class="relative py-24 sm:py-32 px-5 sm:px-8 border-t border-line">
+      <div class="max-w-4xl mx-auto">
+
+        <div class="fade-up mb-14">
+          <p class="font-mono text-xs text-cyan tracking-[0.25em] mb-3">01 — PROFIL</p>
+          <h2 class="font-mono font-bold text-3xl sm:text-4xl text-ink">Über mich &amp; Skills</h2>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-14">
+          <div class="hud fade-up border border-line bg-panel rounded-sm p-8" style="--hud-color:#4dfcff">
+            <p class="font-mono text-[11px] text-mute tracking-[0.2em] mb-3">ERFAHRUNG</p>
+            <p class="font-mono font-extrabold text-5xl text-cyan">
+              <span data-counter data-target="1.5">0</span><span class="text-2xl align-top ml-1">Jahre</span>
+            </p>
+          </div>
+          <div class="hud fade-up border border-line bg-panel rounded-sm p-8" style="--hud-color:#39ff8a">
+            <p class="font-mono text-[11px] text-mute tracking-[0.2em] mb-3">PROJEKTE</p>
+            <p class="font-mono font-extrabold text-5xl text-green">
+              <span data-counter data-target="15">0</span><span class="text-2xl align-top">+</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Skill cards -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+          <div class="fade-up border border-line bg-panel2 rounded-sm p-7">
+            <div class="flex items-center gap-2.5 mb-6">
+              <i class="fa-solid fa-code text-cyan"></i>
+              <p class="font-mono text-[12px] tracking-widest text-ink/90">CORE STACK</p>
+            </div>
+            <ul class="space-y-4 font-mono text-[12px] text-mute">
+              <li>
+                <div class="flex justify-between mb-1.5">
+                  <span>HTML</span><span class="text-cyan">95%</span>
+                </div>
+                <div class="skill-bar"><span data-bar data-width="95" style="background:#4dfcff"></span></div>
+              </li>
+              <li>
+                <div class="flex justify-between mb-1.5">
+                  <span>CSS</span><span class="text-cyan">40%</span>
+                </div>
+                <div class="skill-bar"><span data-bar data-width="40" style="background:#4dfcff"></span></div>
+                <p class="mt-1.5 text-[10px] text-mute/80 italic">Großteil des CSS ist mit KI generiert</p>
+              </li>
+              <li>
+                <div class="flex justify-between mb-1.5">
+                  <span>JavaScript</span><span class="text-cyan">85%</span>
+                </div>
+                <div class="skill-bar"><span data-bar data-width="85" style="background:#4dfcff"></span></div>
+              </li>
+            </ul>
+          </div>
+
+          <div class="fade-up border border-line bg-panel2 rounded-sm p-7">
+            <div class="flex items-center gap-2.5 mb-6">
+              <i class="fa-solid fa-shield-halved text-green"></i>
+              <p class="font-mono text-[12px] tracking-widest text-ink/90">SECURITY-FOKUS</p>
+            </div>
+            <p class="font-sans text-[14.5px] text-ink/70 leading-relaxed">
+              Cyber-Security-Prinzipien fließen direkt ins Frontend ein — von sauberer
+              Eingabevalidierung über sichere Datenflüsse bis hin zu einer Denkweise, die
+              Schwachstellen erkennt, bevor sie entstehen.
+            </p>
+          </div>
+
+          <div class="fade-up border border-line bg-panel2 rounded-sm p-7">
+            <div class="flex items-center gap-2.5 mb-6">
+              <i class="fa-solid fa-robot text-cyan"></i>
+              <p class="font-mono text-[12px] tracking-widest text-ink/90">KI-WORKFLOW</p>
+            </div>
+            <p class="font-sans text-[14.5px] text-ink/70 leading-relaxed">
+              KI-Tools sind fester Bestandteil meines Workflows: gezieltes Code-Fixing,
+              Refactoring und Effizienz-Checks, damit jede Zeile Code schneller,
+              stabiler und sicherer wird.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- FOKUS                                                         -->
+    <!-- ============================================================ -->
+    <section id="focus" class="relative py-24 sm:py-32 px-5 sm:px-8 border-t border-line bg-panel/25">
+      <div class="max-w-4xl mx-auto">
+
+        <div class="fade-up mb-14">
+          <p class="font-mono text-xs text-cyan tracking-[0.25em] mb-3">02 — AKTUELL</p>
+          <h2 class="font-mono font-bold text-3xl sm:text-4xl text-ink">Woran ich gerade arbeite</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          <div class="hud fade-up border border-line bg-panel rounded-sm p-8 flex flex-col" style="--hud-color:#39ff8a">
+            <div class="flex items-center justify-between mb-6">
+              <span class="font-mono text-[10px] text-green tracking-widest border border-green/30 rounded-sm px-2 py-1">EIGEN</span>
+              <i class="fa-solid fa-flask text-green"></i>
+            </div>
+            <h3 class="font-mono font-bold text-xl text-ink mb-3">Eigene Projekte</h3>
+            <p class="font-sans text-[14.5px] text-ink/70 leading-relaxed flex-1">
+              Freiraum für Innovation und Experimente — hier teste ich neue Ideen,
+              UI-Konzepte und Sicherheitsansätze ohne Vorgaben, oft mit
+              KI-gestütztem Rapid-Prototyping.
+            </p>
+          </div>
+
+          <div class="hud fade-up border border-line bg-panel rounded-sm p-8 flex flex-col" style="--hud-color:#4dfcff">
+            <div class="flex items-center justify-between mb-6">
+              <span class="font-mono text-[10px] text-cyan tracking-widest border border-cyan/30 rounded-sm px-2 py-1">PIXEL CITY</span>
+              <i class="fa-solid fa-building-shield text-cyan"></i>
+            </div>
+            <h3 class="font-mono font-bold text-xl text-ink mb-3">Projekte von Pixel City</h3>
+            <p class="font-sans text-[14.5px] text-ink/70 leading-relaxed flex-1">
+              Professionelle Entwicklung im Team von Pixel City — sauberer,
+              wartbarer Code mit Fokus auf Zuverlässigkeit, Performance und
+              Sicherheitsstandards.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- LINKS / FOOTER                                                -->
+    <!-- ============================================================ -->
+    <footer id="links" class="relative py-24 sm:py-32 px-5 sm:px-8 border-t border-line">
+      <div class="max-w-4xl mx-auto">
+
+        <div class="fade-up mb-14">
+          <p class="font-mono text-xs text-cyan tracking-[0.25em] mb-3">03 — VERBINDUNGEN</p>
+          <h2 class="font-mono font-bold text-3xl sm:text-4xl text-ink">Links &amp; Vernetzung</h2>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-10 mb-16">
+
+          <!-- Social & Community -->
+          <div class="fade-up">
+            <p class="font-mono text-[11px] text-mute tracking-widest mb-4">SOCIAL &amp; COMMUNITY</p>
+            <div class="space-y-3">
+
+              <a
+                href="https://twitch.tv/diamond8sniper"
+                target="_blank"
+                rel="noopener"
+                class="hud group flex items-center justify-between border border-line bg-panel2 rounded-sm px-5 py-4 hover:border-cyan/50 transition-colors"
+                style="--hud-color:#4dfcff"
+              >
+                <span class="flex items-center gap-3 font-mono text-sm text-ink/85 group-hover:text-cyan transition-colors">
+                  <i class="fa-brands fa-twitch text-lg w-5"></i>Twitch
+                </span>
+                <i class="fa-solid fa-arrow-up-right text-mute group-hover:text-cyan transition-colors"></i>
+              </a>
+
+              <a
+                href="https://mastodon.social/@diamond8sniper"
+                target="_blank"
+                rel="noopener"
+                class="hud group flex items-center justify-between border border-line bg-panel2 rounded-sm px-5 py-4 hover:border-cyan/50 transition-colors"
+                style="--hud-color:#4dfcff"
+              >
+                <span class="flex items-center gap-3 font-mono text-sm text-ink/85 group-hover:text-cyan transition-colors">
+                  <i class="fa-brands fa-mastodon text-lg w-5"></i>Mastodon
+                </span>
+                <i class="fa-solid fa-arrow-up-right text-mute group-hover:text-cyan transition-colors"></i>
+              </a>
+
+              <a
+                href="https://open.spotify.com/user/312d7whucgluvn3gek2amylytr4m?si=wnm7DJqxSmqSIP5b6ySsSQ"
+                target="_blank"
+                rel="noopener"
+                class="hud group flex items-center justify-between border border-line bg-panel2 rounded-sm px-5 py-4 hover:border-cyan/50 transition-colors"
+                style="--hud-color:#4dfcff"
+              >
+                <span class="flex items-center gap-3 font-mono text-sm text-ink/85 group-hover:text-cyan transition-colors">
+                  <i class="fa-brands fa-spotify text-lg w-5"></i>Spotify
+                </span>
+                <i class="fa-solid fa-arrow-up-right text-mute group-hover:text-cyan transition-colors"></i>
+              </a>
+
+            </div>
+          </div>
+
+          <!-- Websites -->
+          <div class="fade-up">
+            <p class="font-mono text-[11px] text-mute tracking-widest mb-4">MEINE WEBSEITEN</p>
+            <div class="space-y-3">
+
+              <a
+                href="https://marcel533.github.io/web-shop/"
+                target="_blank"
+                rel="noopener"
+                class="hud group flex items-center justify-between border border-line bg-panel2 rounded-sm px-5 py-4 hover:border-green/50 transition-colors"
+                style="--hud-color:#39ff8a"
+              >
+                <span class="flex items-center gap-3 font-mono text-sm text-ink/85 group-hover:text-green transition-colors">
+                  <i class="fa-solid fa-store text-lg w-5"></i>Webshop
+                </span>
+                <i class="fa-solid fa-arrow-up-right text-mute group-hover:text-green transition-colors"></i>
+              </a>
+
+              <a
+                href="https://github.com/marcel533"
+                target="_blank"
+                rel="noopener"
+                class="hud group flex items-center justify-between border border-line bg-panel2 rounded-sm px-5 py-4 hover:border-green/50 transition-colors"
+                style="--hud-color:#39ff8a"
+              >
+                <span class="flex items-center gap-3 font-mono text-sm text-ink/85 group-hover:text-green transition-colors">
+                  <i class="fa-brands fa-github text-lg w-5"></i>GitHub
+                </span>
+                <i class="fa-solid fa-arrow-up-right text-mute group-hover:text-green transition-colors"></i>
+              </a>
+
+            </div>
+          </div>
+
+        </div>
+
+        <div class="border-t border-line pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p class="font-mono text-[11px] text-mute">© <span id="year"></span> Diamond8_Sniper — alle Systeme nominal</p>
+          <p class="font-mono text-[11px] text-mute">
+            built with <span class="text-cyan">HTML</span> · <span class="text-green">CSS</span> · <span class="text-cyan">JS</span>
+          </p>
+        </div>
+
+        <div class="border-t border-line mt-8 pt-8">
+          <p class="font-sans text-[13px] text-ink/70 leading-relaxed max-w-2xl mx-auto text-center">
+            Kein Geheimnis: Alles andere schreibe ich selbst, aber das CSS wird von KI generiert
+            und mein Code wird von KI gefixt.
+          </p>
+        </div>
+
+      </div>
+    </footer>
+
+  </main>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    /* ============================================================ */
+    /* Mobile menu                                                   */
+    /* ============================================================ */
+    const menuBtn = document.getElementById('menuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    let menuOpen = false;
+
+    function setMenuOpen(isOpen) {
+      menuOpen = isOpen;
+      menuBtn.setAttribute('aria-expanded', String(menuOpen));
+      menuBtn.innerHTML = menuOpen
+        ? '<i class="fa-solid fa-xmark"></i>'
+        : '<i class="fa-solid fa-bars"></i>';
+      mobileMenu.style.maxHeight = menuOpen ? mobileMenu.scrollHeight + 'px' : '0px';
+      mobileMenu.style.opacity = menuOpen ? '1' : '0';
+    }
+
+    menuBtn.addEventListener('click', () => setMenuOpen(!menuOpen));
+
+    mobileMenu.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => setMenuOpen(false));
+    });
+
+    /* ============================================================ */
+    /* Typewriter effect                                             */
+    /* ============================================================ */
+    (function initTypewriter() {
+      const el = document.getElementById('typewriter');
+      const phrases = [
+        'Frontend-Entwickler',
+        'Cyber Security Enthusiast',
+        'KI-Optimierter Code',
+      ];
+
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduceMotion) {
+        el.textContent = phrases.join('  //  ');
+        return;
+      }
+
+      let phraseIndex = 0;
+      let charIndex = 0;
+      let deleting = false;
+
+      function tick() {
+        const current = phrases[phraseIndex];
+
+        if (!deleting) {
+          charIndex++;
+          el.textContent = current.slice(0, charIndex);
+
+          if (charIndex === current.length) {
+            deleting = true;
+            setTimeout(tick, 1400);
+            return;
+          }
+        } else {
+          charIndex--;
+          el.textContent = current.slice(0, charIndex);
+
+          if (charIndex === 0) {
+            deleting = false;
+            phraseIndex = (phraseIndex + 1) % phrases.length;
+          }
+        }
+
+        setTimeout(tick, deleting ? 30 : 55);
+      }
+
+      tick();
+    })();
+
+    /* ============================================================ */
+    /* Matrix / code-rain background (hero only)                    */
+    /* ============================================================ */
+    (function initMatrixRain() {
+      const canvas = document.getElementById('matrixCanvas');
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const fontSize = 15;
+      const chars = '01アイウエオカキクケコサシスセソタチツテト{}[]<>/;=+#$%'.split('');
+
+      let cols;
+      let drops;
+
+      function resize() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        cols = Math.floor(canvas.width / fontSize);
+        drops = new Array(cols).fill(0).map(() => Math.random() * -50);
+      }
+
+      window.addEventListener('resize', resize);
+      resize();
+
+      function draw() {
+        ctx.fillStyle = 'rgba(10,13,12,0.16)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.font = fontSize + 'px "JetBrains Mono", monospace';
+
+        for (let i = 0; i < cols; i++) {
+          const text = chars[Math.floor(Math.random() * chars.length)];
+          const x = i * fontSize;
+          const y = drops[i] * fontSize;
+          const isHead = Math.random() > 0.94;
+
+          ctx.fillStyle = isHead ? '#cdece0' : 'rgba(77,252,255,0.4)';
+          ctx.fillText(text, x, y);
+
+          if (y > canvas.height && Math.random() > 0.975) {
+            drops[i] = 0;
+          }
+          drops[i]++;
+        }
+      }
+
+      if (!reduceMotion) {
+        setInterval(draw, 65);
+      } else {
+        canvas.style.display = 'none';
+      }
+    })();
+
+    /* ============================================================ */
+    /* Scroll reveal                                                 */
+    /* ============================================================ */
+    const revealEls = document.querySelectorAll('.fade-up');
+    const revealObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in');
+            revealObserver.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+    revealEls.forEach((el) => revealObserver.observe(el));
+
+    /* ============================================================ */
+    /* Counter animation                                             */
+    /* ============================================================ */
+    const counters = document.querySelectorAll('[data-counter]');
+    const counterObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+
+          const el = entry.target;
+          const target = parseFloat(el.dataset.target);
+          const isDecimal = target % 1 !== 0;
+          const duration = 1100;
+          const start = performance.now();
+
+          function frame(now) {
+            const progress = Math.min((now - start) / duration, 1);
+            const current = target * progress;
+            el.textContent = isDecimal ? current.toFixed(1) : Math.floor(current);
+
+            if (progress < 1) {
+              requestAnimationFrame(frame);
+            } else {
+              el.textContent = isDecimal ? target.toFixed(1) : target;
+            }
+          }
+
+          requestAnimationFrame(frame);
+          counterObserver.unobserve(el);
+        });
+      },
+      { threshold: 0.4 }
+    );
+    counters.forEach((el) => counterObserver.observe(el));
+
+    /* ============================================================ */
+    /* Skill bar animation                                           */
+    /* ============================================================ */
+    const bars = document.querySelectorAll('[data-bar]');
+    const barObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.style.width = entry.target.dataset.width + '%';
+            barObserver.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+    bars.forEach((el) => barObserver.observe(el));
+  </script>
+
+</body>
+</html>
