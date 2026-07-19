@@ -6,4 +6,4 @@ Das ist meine persönliche Portfolio-Webseite. Sie zeigt im modernen Terminal-De
 Link: https://marcel533.github.io/Protofolio/
 ---
 
-The css is fully generated with AI
+The css and js is fully generated with AI
