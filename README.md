@@ -7,3 +7,4 @@ Link: https://marcel533.github.io/Protofolio/
 ---
 
 The css and js is fully generated with AI
+The read.md is fully generated with ai
