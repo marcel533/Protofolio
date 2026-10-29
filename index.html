@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>marcel533 — Frontend Entwickler</title>
 <meta name="description" content="marcel533 — Frontend-Entwickler, Cyber Security Enthusiast, KI-optimierter Code.">
+<meta name="theme-color" content="#030408">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
@@ -45,6 +49,7 @@ ul { list-style: none; }
 .wrap { width: min(100%, 80rem); margin: 0 auto; padding: 0 clamp(1rem, 3vw, 3rem); }
 
 /* Loader */
+.ld-mark { width: clamp(3rem, 8vw, 4.5rem); height: auto; image-rendering: pixelated; align-self: flex-start; margin-bottom: 1.25rem; }
 .loader { position: fixed; inset: 0; z-index: 300; background: var(--bg); display: flex; flex-direction: column; justify-content: flex-end; padding: clamp(1rem, 3vw, 3rem); animation: lo .01s 6s forwards; }
 @keyframes lo { to { visibility: hidden; opacity: 0; } }
 .ld-num { font: 800 clamp(5rem, 22vw, 18rem)/.85 var(--font-display); letter-spacing: -.05em; color: var(--accent); }
@@ -59,7 +64,8 @@ ul { list-style: none; }
 /* Nav */
 .nav { position: fixed; z-index: 50; top: 0; left: 0; right: 0; height: 3.5rem; background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
 .nav .wrap { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-.brand { font: 800 1.125rem var(--font-display); letter-spacing: -.03em; white-space: nowrap; }
+.brand { display: inline-flex; align-items: center; gap: .55rem; font: 800 1.125rem var(--font-display); letter-spacing: -.03em; white-space: nowrap; }
+.brand-mark { height: 1.4rem; width: auto; image-rendering: pixelated; flex: none; }
 .brand::after { content: ""; display: inline-block; width: .45rem; height: .45rem; margin-left: .3rem; border-radius: 50%; background: var(--accent); }
 .nav ul { display: flex; gap: .75rem; }
 .nav-r { display: flex; align-items: center; gap: .9rem; }
@@ -171,12 +177,12 @@ li:last-child > .bl { border-bottom: 1px solid var(--line); }
 </head>
 <body>
 
-<div class="loader" id="loader" aria-hidden="true"><div class="ld-num" id="ldNum">000</div><p class="mono ld-name" data-i="ld">marcel533 · lädt</p></div>
+<div class="loader" id="loader" aria-hidden="true"><img class="ld-mark" src="logo-mark.svg" alt="" width="20" height="18"><div class="ld-num" id="ldNum">000</div><p class="mono ld-name" data-i="ld">marcel533 · lädt</p></div>
 <div class="cursor" id="cursor" aria-hidden="true"></div>
 
 <header class="nav">
   <div class="wrap">
-    <a class="brand" href="#hero">marcel533</a>
+    <a class="brand" href="#hero" aria-label="marcel533 – Start"><img class="brand-mark" src="logo-mark.svg" alt="" width="20" height="18">marcel533</a>
     <div class="nav-r"><nav aria-label="Hauptnavigation" data-ia="nav"><ul>
       <li><a href="#hero" data-i="n0">Start</a></li>
       <li><a href="#about" data-i="n1">Profil</a></li>
